@@ -1,0 +1,26 @@
+# Dependencias
+node_modules/
+
+# Secretos y entorno local
+.env
+.env.*
+!.env.example
+
+# Builds
+dist/
+.next/
+out/
+coverage/
+
+# Prisma (cliente generado)
+apps/api/src/generated/
+
+# Editor y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Espacio de pruebas personal (no se sube)
+playground/
+docs
