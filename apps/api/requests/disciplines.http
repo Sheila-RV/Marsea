@@ -1,0 +1,38 @@
+```http
+@baseUrl = http://localhost:3000/api
+@gymId = d6c44f92-de41-465d-bff7-24de734dd8ab
+### Crear
+POST {{baseUrl}}/gyms/{{gymId}}/disciplines
+Content-Type: application/json
+
+{
+  "name": "Spinning",
+  "description": "Ciclismo indoor de alta intensidad"
+}
+
+### Listar
+GET {{baseUrl}}/gyms/{{gymId}}/disciplines
+
+
+
+GET {{baseUrl}}/gyms/{{gymId}}/disciplines/9e029c2e-619e-46c3-a4b8-cc0c8e430c82
+
+### Modificar
+PATCH {{baseUrl}}/gyms/{{/9e029c2e-619e-46c3-a4b8-cc0c8e430c82}}/disciplines/ID_DE_UNA_DISCIPLINA
+Content-Type: application/json
+
+{
+  "description": "Ciclismo indoor, 45 minutos"
+}
+
+### Modificar
+PATCH {{baseUrl}}/gyms/{{gymId}}/disciplines/9e029c2e-619e-46c3-a4b8-cc0c8e430c82
+Content-Type: application/json
+
+{
+  "description": "Ciclismo indoor, 45 minutos"
+}
+
+
+### Borrar
+DELETE {{baseUrl}}/gyms/{{gymId}}/disciplines/ID_DE_UNA_DISCIPLINA
