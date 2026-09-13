@@ -24,3 +24,4 @@ Thumbs.db
 # Espacio de pruebas personal (no se sube)
 playground/
 docs
+.claude/
