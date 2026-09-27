@@ -1,38 +1,85 @@
-```http
 @baseUrl = http://localhost:3000/api
-@gymId = d6c44f92-de41-465d-bff7-24de734dd8ab
-### Crear
-POST {{baseUrl}}/gyms/{{gymId}}/disciplines
+
+### Login como admin de Iron Gym (copia el accessToken de la respuesta)
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "name": "Spinning",
-  "description": "Ciclismo indoor de alta intensidad"
+  "email": "admin@iron-gym.dev",
+  "password": "IronAdmin123!"
+}
+
+### Ahora pega el token aquí abajo
+@token = PEGA_AQUI_EL_ACCESS_TOKEN
+
+### Crear
+POST {{baseUrl}}/disciplines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Boxeo",
+  "description": "Clases de boxeo recreativo"
 }
 
 ### Listar
-GET {{baseUrl}}/gyms/{{gymId}}/disciplines
+GET {{baseUrl}}/disciplines
+Authorization: Bearer {{token}}
 
-
-
-GET {{baseUrl}}/gyms/{{gymId}}/disciplines/9e029c2e-619e-46c3-a4b8-cc0c8e430c82
+### Ver una (reemplaza el id)
+GET {{baseUrl}}/disciplines/ID_DE_UNA_DISCIPLINA
+Authorization: Bearer {{token}}
 
 ### Modificar
-PATCH {{baseUrl}}/gyms/{{/9e029c2e-619e-46c3-a4b8-cc0c8e430c82}}/disciplines/ID_DE_UNA_DISCIPLINA
+PATCH {{baseUrl}}/disciplines/ID_DE_UNA_DISCIPLINA
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "description": "Ciclismo indoor, 45 minutos"
+  "description": "Boxeo recreativo, todos los niveles"
 }
-
-### Modificar
-PATCH {{baseUrl}}/gyms/{{gymId}}/disciplines/9e029c2e-619e-46c3-a4b8-cc0c8e430c82
-Content-Type: application/json
-
-{
-  "description": "Ciclismo indoor, 45 minutos"
-}
-
 
 ### Borrar
-DELETE {{baseUrl}}/gyms/{{gymId}}/disciplines/ID_DE_UNA_DISCIPLINA
+DELETE {{baseUrl}}/disciplines/ID_DE_UNA_DISCIPLINA
+Authorization: Bearer {{token}}
+
+### --- Casos de error ---
+
+### Sin token -> 401
+GET {{baseUrl}}/disciplines
+
+### Nombre muy corto -> 400
+POST {{baseUrl}}/disciplines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "A"
+}
+
+### Campo no declarado -> 400 (forbidNonWhitelisted)
+POST {{baseUrl}}/disciplines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Otra",
+  "color": "rojo"
+}
+
+### Nombre duplicado -> 409
+POST {{baseUrl}}/disciplines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Boxeo"
+}
+
+### id con formato inválido -> 400
+GET {{baseUrl}}/disciplines/no-es-un-uuid
+Authorization: Bearer {{token}}
+
+### id inexistente -> 404
+GET {{baseUrl}}/disciplines/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}

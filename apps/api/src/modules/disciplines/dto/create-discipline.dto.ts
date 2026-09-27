@@ -1,4 +1,5 @@
 import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
+
 export class CreateDisciplineDto {
   // texto, entre 2 y 50 caracteres
   @IsString()

@@ -52,7 +52,12 @@ export class DisciplinesService {
     id: string,
     dto: UpdateDisciplineDto,
   ): Promise<Discipline> {
-    await this.findOne(gymId, id);
+    const current = await this.findOne(gymId, id);
+
+    if (dto.name && dto.name !== current.name) {
+      await this.assertNameIsAvailable(gymId, dto.name);
+    }
+
     return this.prisma.discipline.update({
       where: { id },
       data: dto,

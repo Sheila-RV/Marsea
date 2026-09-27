@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -12,17 +10,48 @@ datasource db {
   provider = "postgresql"
 }
 
-model Gym {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  timezone  String   @default("America/La_Paz")
-  logoUrl   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+}
 
-  disciplines Discipline[]
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum ClassSessionStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+model Gym {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  timezone    String   @default("America/La_Paz")
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  disciplines      Discipline[]
+  users            User[]
+  plans            Plan[]
+  memberships      Membership[]
+  classSessions    ClassSession[]
+  bookings         Booking[]
+  recurringClasses RecurringClass[]
 }
 
 model Discipline {
@@ -35,5 +64,156 @@ model Discipline {
   gymId       String
   gym         Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
 
+  plans            PlanDiscipline[]
+  classSessions    ClassSession[]
+  recurringClasses RecurringClass[]
+
   @@unique([gymId, name])
+}
+
+// Plantilla de una clase que se repite en ciertos días de la semana dentro de
+// un rango de fechas. Al crearla (o ajustarla) se generan/regeneran las
+// ClassSession concretas; el miembro reserva siempre una ClassSession real,
+// nunca la plantilla.
+model RecurringClass {
+  id              String   @id @default(uuid())
+  instructorName  String
+  capacity        Int
+  // Días de la semana en que se repite: 0=domingo ... 6=sábado (Date.getDay()).
+  daysOfWeek      Int[]
+  // Hora del día en formato "HH:mm", igual para cada ocurrencia generada.
+  startTime       String
+  durationMinutes Int
+  rangeStart      DateTime
+  rangeEnd        DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  gymId String
+  gym   Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  disciplineId String
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+
+  generatedSessions ClassSession[]
+
+  @@index([gymId])
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         Role
+  isActive     Boolean  @default(true)
+  qrCode       String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  gymId String?
+  gym   Gym?    @relation(fields: [gymId], references: [id])
+
+  memberships Membership[]
+  bookings    Booking[]
+
+  @@index([gymId])
+}
+
+model Plan {
+  id           String   @id @default(uuid())
+  name         String
+  price        Decimal  @db.Decimal(10, 2)
+  durationDays Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  gymId        String
+  gym          Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  disciplines PlanDiscipline[]
+  memberships Membership[]
+
+  @@unique([gymId, name])
+}
+
+// Tabla intermedia para la relación muchos-a-muchos entre Plan y Discipline:
+// un plan cubre varias disciplinas, y una disciplina puede estar en varios planes.
+model PlanDiscipline {
+  planId       String
+  disciplineId String
+
+  plan       Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  discipline Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+
+  @@id([planId, disciplineId])
+}
+
+model Membership {
+  id        String           @id @default(uuid())
+  startDate DateTime
+  endDate   DateTime
+  status    MembershipStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  gymId String
+  gym   Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@index([gymId, userId])
+}
+
+model ClassSession {
+  id             String             @id @default(uuid())
+  instructorName String
+  startsAt       DateTime
+  endsAt         DateTime
+  capacity       Int
+  status         ClassSessionStatus @default(SCHEDULED)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  gymId String
+  gym   Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  disciplineId String
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+
+  // Si esta sesión nació de una clase recurrente. Se conserva aunque la
+  // plantilla se borre, para no perder el historial de reservas/asistencia.
+  recurringClassId String?
+  recurringClass   RecurringClass? @relation(fields: [recurringClassId], references: [id], onDelete: SetNull)
+
+  bookings Booking[]
+
+  @@index([gymId, startsAt])
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  status      BookingStatus @default(BOOKED)
+  bookedAt    DateTime      @default(now())
+  checkedInAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  gymId String
+  gym   Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classSessionId String
+  classSession   ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+
+  // Un usuario no puede tener dos reservas para la misma sesión de clase.
+  @@unique([userId, classSessionId])
+  @@index([gymId])
 }
