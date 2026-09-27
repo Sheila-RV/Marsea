@@ -1,19 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
-import { QrCode } from "lucide-react";
+import { Download, QrCode } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { usersApi } from "@/lib/api";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MyQrCodePage() {
+  const { profile } = useAuth();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["my-qr-code"],
     queryFn: usersApi.getMyQrCode,
@@ -21,36 +17,62 @@ export default function MyQrCodePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Mi código QR</h1>
+      <div className="space-y-1">
+        <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+          Panel de socio
+        </span>
+        <h1 className="font-serif text-3xl font-bold">
+          Mi código QR de acceso
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Presenta este código en recepción al llegar a tu clase para el
+          check-in automático.
+        </p>
+      </div>
 
-      <Card className="max-w-sm">
-        <CardHeader className="items-center text-center">
-          <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <QrCode className="h-5 w-5" />
+      <Card className="mx-auto max-w-md">
+        <CardContent className="flex flex-col items-center gap-6 py-4 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-2xl text-primary">
+            <QrCode className="h-7 w-7" />
           </div>
-          <CardTitle>Check-in en el gimnasio</CardTitle>
-          <CardDescription>
-            Muestra este código en recepción para que marquen tu asistencia a
-            la clase que reservaste.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          {isLoading && <Skeleton className="h-56 w-56 rounded-lg" />}
+
+          {isLoading && <Skeleton className="h-56 w-56 rounded-2xl" />}
           {isError && (
             <p className="text-sm text-destructive">
               No se pudo cargar tu código QR.
             </p>
           )}
           {data && (
-            <div className="rounded-lg bg-white p-3">
-              <Image
-                src={data.qrImage}
-                alt="Tu código QR"
-                width={224}
-                height={224}
-                unoptimized
-              />
-            </div>
+            <>
+              <div className="inline-block rounded-2xl border border-input bg-secondary p-6 shadow-inner">
+                {/* eslint-disable-next-line @next/next/no-img-element -- data: URI generado por el backend, next/image no aporta nada aquí */}
+                <img
+                  src={data.qrImage}
+                  alt="Tu código QR"
+                  width={192}
+                  height={192}
+                  className="mx-auto"
+                />
+              </div>
+
+              <div>
+                <h3 className="font-serif text-xl font-bold">
+                  {profile?.fullName}
+                </h3>
+                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                  {data.qrCode}
+                </p>
+              </div>
+
+              <Button
+                render={<a href={data.qrImage} download="mi-codigo-qr.png" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
+                <Download className="h-4 w-4" />
+                Descargar QR
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>

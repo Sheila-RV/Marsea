@@ -5,13 +5,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isSameDay, isToday, isTomorrow } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
-import { Clock, Users } from "lucide-react";
+import { ArrowRight, Clock, UserRound } from "lucide-react";
 import { classSessionsApi, bookingsApi, membershipsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { DayStrip } from "@/components/day-strip";
 import { BookingConfirmDialog } from "@/components/booking-confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,10 @@ export default function AvailableClassesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Clases disponibles</h1>
+        <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+          Panel de socio
+        </span>
+        <h1 className="font-serif text-3xl font-bold">Clases disponibles</h1>
         {membership && (
           <p className="text-sm text-muted-foreground">
             Tu plan es{" "}
@@ -149,63 +152,87 @@ export default function AvailableClassesPage() {
             ))}
           </div>
         ) : daySessions.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
             No hay clases disponibles este día.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border">
-            {daySessions.map((session, index) => {
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {daySessions.map((session) => {
               const isFull = session.remainingCapacity <= 0;
+              const durationMin = Math.round(
+                (new Date(session.endsAt).getTime() -
+                  new Date(session.startsAt).getTime()) /
+                  60000,
+              );
 
               return (
-                <div
+                <Card
                   key={session.id}
                   className={cn(
-                    "flex flex-wrap items-center gap-4 px-4 py-3",
-                    index > 0 && "border-t border-border",
-                    session.isBookedByMe && "bg-success-muted",
+                    "justify-between",
+                    session.isBookedByMe && "ring-2 ring-success/40",
                   )}
                 >
-                  <div className="w-32 shrink-0 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1 font-medium text-foreground">
-                      <Clock className="h-3.5 w-3.5" />
-                      {format(new Date(session.startsAt), "HH:mm")}
-                    </span>
-                    <span className="text-xs">
-                      {format(new Date(session.endsAt), "HH:mm")} ·{" "}
-                      {Math.round(
-                        (new Date(session.endsAt).getTime() -
-                          new Date(session.startsAt).getTime()) /
-                          60000,
-                      )}
-                      min
-                    </span>
-                  </div>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 rounded-lg bg-[#B7D1EA]/40 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(session.startsAt), "HH:mm")}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-lg px-2.5 py-1 text-xs font-medium",
+                          isFull
+                            ? "bg-destructive/10 text-destructive"
+                            : session.remainingCapacity <= 3
+                              ? "bg-amber-50 text-amber-600"
+                              : "bg-emerald-50 text-emerald-600",
+                        )}
+                      >
+                        {isFull
+                          ? "Sin cupo"
+                          : `${session.remainingCapacity} lugares libres`}
+                      </span>
+                    </div>
 
-                  <div className="min-w-40 flex-1">
-                    <p className="text-sm font-medium">
+                    <h3 className="font-serif text-xl font-bold">
                       {session.disciplineName}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.instructorName}
-                    </p>
-                  </div>
+                    </h3>
 
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Users className="h-3.5 w-3.5" />
-                    {session.remainingCapacity}/{session.capacity}
-                  </div>
+                    <div className="space-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <UserRound className="h-3.5 w-3.5 text-primary" />
+                          Instructor:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {session.instructorName}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-primary" />
+                          Duración:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {durationMin} minutos
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
 
-                  <div className="shrink-0">
+                  <CardFooter className="justify-between border-t border-border bg-transparent">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {session.bookedCount}/{session.capacity} inscritos
+                    </span>
                     {session.isBookedByMe ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-success">
+                        <span className="text-xs font-medium text-success">
                           Confirmada
                         </span>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-full"
                           disabled={cancelMutation.isPending}
                           onClick={() => {
                             if (session.myBookingId) {
@@ -219,15 +246,15 @@ export default function AvailableClassesPage() {
                     ) : (
                       <Button
                         size="sm"
-                        className="rounded-full"
                         disabled={isFull}
                         onClick={() => setConfirmingSession(session)}
                       >
-                        {isFull ? "Sin cupo" : "Reservar"}
+                        {isFull ? "Sin cupo" : "Reservar lugar"}
+                        {!isFull && <ArrowRight className="h-3.5 w-3.5" />}
                       </Button>
                     )}
-                  </div>
-                </div>
+                  </CardFooter>
+                </Card>
               );
             })}
           </div>

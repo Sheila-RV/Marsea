@@ -44,15 +44,17 @@ export function BookingConfirmDialog({
 }: BookingConfirmDialogProps) {
   return (
     <Dialog open={!!session} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="rounded-3xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Confirmar tu reserva</DialogTitle>
+          <DialogTitle className="font-serif text-xl">
+            Confirmar tu reserva
+          </DialogTitle>
         </DialogHeader>
 
         {session && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-sm font-medium">{session.disciplineName}</p>
+            <div className="rounded-xl bg-secondary p-3">
+              <p className="text-sm font-semibold">{session.disciplineName}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {format(new Date(session.startsAt), "EEEE d 'de' MMMM, HH:mm", {
                   locale: es,
@@ -68,7 +70,7 @@ export function BookingConfirmDialog({
               </span>
             </div>
 
-            <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
+            <div className="space-y-3 rounded-xl border border-input bg-secondary/60 p-3">
               <p className="text-xs text-muted-foreground">
                 Próximamente: pagos por clases sueltas o upgrades de plan. Por
                 ahora esto no realiza ningún cargo.

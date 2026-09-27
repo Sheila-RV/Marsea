@@ -1,13 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
   CalendarDays,
   CreditCard,
-  Dumbbell,
   IdCard,
+  Layers,
   LayoutDashboard,
   LogOut,
   MoreHorizontal,
@@ -43,7 +44,7 @@ import {
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/classes", label: "Clases", icon: CalendarDays },
-  { href: "/disciplines", label: "Disciplinas", icon: Dumbbell },
+  { href: "/disciplines", label: "Disciplinas", icon: Layers },
   { href: "/plans", label: "Planes", icon: CreditCard },
   { href: "/users", label: "Usuarios", icon: Users },
   { href: "/memberships", label: "Membresías", icon: IdCard },
@@ -86,11 +87,15 @@ function AppShell({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Dumbbell className="h-3.5 w-3.5" />
+              <span className="font-serif text-xs">M</span>
             </div>
-            <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">
-              Gym Management
-            </span>
+            <Image
+              src="/marsea-logo.png"
+              alt="MARSEA"
+              width={126}
+              height={22}
+              className="h-[18px] w-auto shrink-0 brightness-0 invert group-data-[collapsible=icon]:hidden"
+            />
           </div>
         </SidebarHeader>
         <SidebarContent>
